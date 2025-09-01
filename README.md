@@ -62,6 +62,33 @@ Call
 
 This demo mocks out function calls so you can provide sample responses. In reality you could handle the function call, execute some code, and then supply the response back to the model.
 
+### Outbound Calling (Optional)
+
+You can also originate an outbound call from your Twilio number to a destination phone.
+
+1. In `webapp/.env` add:
+   - `TWILIO_CALL_FROM=+1YourTwilioNumber` (must be a Twilio-owned or verified number)
+   - `TWILIO_ANSWER_URL=https://<your-ngrok-domain>.ngrok-free.app/twiml` (the existing websocket-server TwiML endpoint)
+2. Restart the Next.js dev server if it was running (so env vars load).
+3. Make a POST request:
+
+```bash
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"to":"+15551234567"}' \
+  http://localhost:3000/api/twilio/call
+```
+
+Optional: supply a custom answer URL:
+
+```bash
+curl -X POST -H "Content-Type: application/json" \
+  -d '{"to":"+15551234567","url":"https://<your-ngrok-domain>.ngrok-free.app/twiml"}' \
+  http://localhost:3000/api/twilio/call
+```
+
+If successful you will get `{ sid, status }` back. Twilio will fetch the TwiML at the answer URL (the same one used for inbound) which establishes the media stream to your websocket server and onward to the Realtime API.
+
 ## Full Setup
 
 1. Make sure your [auth & env](#detailed-auth--env) is configured correctly.

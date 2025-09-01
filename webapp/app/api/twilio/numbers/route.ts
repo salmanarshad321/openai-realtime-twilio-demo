@@ -1,21 +1,23 @@
-import twilioClient from "@/lib/twilio";
+import getTwilioClient from "@/lib/twilio";
 
 export async function GET() {
-  if (!twilioClient) {
+  const client = getTwilioClient();
+  if (!client) {
     return Response.json(
       { error: "Twilio client not initialized" },
       { status: 500 }
     );
   }
 
-  const incomingPhoneNumbers = await twilioClient.incomingPhoneNumbers.list({
+  const incomingPhoneNumbers = await client.incomingPhoneNumbers.list({
     limit: 20,
   });
   return Response.json(incomingPhoneNumbers);
 }
 
 export async function POST(req: Request) {
-  if (!twilioClient) {
+  const client = getTwilioClient();
+  if (!client) {
     return Response.json(
       { error: "Twilio client not initialized" },
       { status: 500 }
@@ -23,7 +25,7 @@ export async function POST(req: Request) {
   }
 
   const { phoneNumberSid, voiceUrl } = await req.json();
-  const incomingPhoneNumber = await twilioClient
+  const incomingPhoneNumber = await client
     .incomingPhoneNumbers(phoneNumberSid)
     .update({ voiceUrl });
 
