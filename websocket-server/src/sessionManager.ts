@@ -144,6 +144,24 @@ function tryConnectModel() {
         ...config,
       },
     });
+
+    // Immediately queue an opening assistant message so AI speaks first.
+    // This creates an assistant message and triggers a response.
+    jsonSend(session.modelConn, {
+      type: "conversation.item.create",
+      item: {
+        type: "message",
+        role: "assistant",
+        content: [
+          {
+            type: "output_text",
+            text: config?.opening_line ||
+              "Hello! I'm your AI assistant. How has your experience been with your vehicle so far?",
+          },
+        ],
+      },
+    });
+    jsonSend(session.modelConn, { type: "response.create" });
   });
 
   session.modelConn.on("message", handleModelMessage);
@@ -263,6 +281,11 @@ function closeAllConnections() {
   session.responseStartTimestamp = undefined;
   session.latestMediaTimestamp = undefined;
   session.saved_config = undefined;
+}
+
+// Exported helper to allow external modules (e.g. function handlers) to trigger a full disconnect.
+export function forceDisconnect() {
+  closeAllConnections();
 }
 
 function cleanupConnection(ws?: WebSocket) {

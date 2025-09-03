@@ -42,8 +42,22 @@ app.all("/twiml", (req, res) => {
   wsUrl.protocol = "wss:";
   wsUrl.pathname = `/call`;
 
-  const twimlContent = twimlTemplate.replace("{{WS_URL}}", wsUrl.toString());
-  res.type("text/xml").send(twimlContent);
+    const escapeXml = (s: string) =>
+      s
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&apos;");
+
+    // Allow overriding via env or optional query param ?g=...
+    const greetingParam = (req.query?.g as string) || "";
+    const rawGreeting = greetingParam || process.env.CALL_GREETING || "Hi";
+    const greeting = escapeXml(rawGreeting);
+
+    let twimlContent = twimlTemplate.replace("{{WS_URL}}", wsUrl.toString());
+    twimlContent = twimlContent.replace("{{GREETING}}", greeting);
+    res.type("text/xml").send(twimlContent);
 });
 
 // New endpoint to list available tools (schemas)

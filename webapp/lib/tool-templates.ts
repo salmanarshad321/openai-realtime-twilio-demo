@@ -62,4 +62,29 @@ export const toolTemplates = [
       },
     },
   },
+  {
+    name: "disconnect_call",
+    type: "function",
+    description: "Disconnect the active phone call and realtime session",
+    parameters: {
+      type: "object",
+      properties: {
+        reason: { type: "string" },
+      },
+    },
+  },
+  {
+    name: "record_vehicle_experience",
+    type: "function",
+    description: "Record a vehicle purchase experience with rating and feedback",
+    parameters: {
+      type: "object",
+      properties: {
+        vehicle: { type: "string" },
+        rating: { type: "number" },
+        feedback: { type: "string" },
+      },
+      required: ["vehicle", "rating", "feedback"],
+    },
+  },
 ];

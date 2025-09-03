@@ -31,7 +31,7 @@ Twilio uses TwiML (a form of XML) to specify how to handle a phone call. When a 
 
 <?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Say>Connected</Say>
+  <Say>{{GREETING}}</Say>
   <Connect>
     <Stream url="{{WS_URL}}" />
   </Connect>
@@ -88,6 +88,22 @@ curl -X POST -H "Content-Type: application/json" \
 ```
 
 If successful you will get `{ sid, status }` back. Twilio will fetch the TwiML at the answer URL (the same one used for inbound) which establishes the media stream to your websocket server and onward to the Realtime API.
+
+#### Custom Greeting
+
+Set an environment variable in `websocket-server/.env`:
+
+```
+CALL_GREETING="I am speaking from Hyundai and wanted to know your experience"
+```
+
+All calls (inbound or outbound) will begin with that spoken line. You can also override per request (useful for testing) via a query parameter on the TwiML URL, e.g. configure the webhook / answer URL as:
+
+```
+https://<your-ngrok>.ngrok-free.app/twiml?g=I%20am%20speaking%20from%20Hyundai%20and%20wanted%20to%20know%20your%20experience
+```
+
+The server escapes XML entities automatically.
 
 ## Full Setup
 

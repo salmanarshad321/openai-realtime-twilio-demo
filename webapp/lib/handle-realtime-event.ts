@@ -112,6 +112,26 @@ export default function handleRealtimeEvent(
               : m
           );
         });
+
+        // If this is the record_vehicle_experience output, persist to localStorage
+        try {
+          const parsed = JSON.parse(item.output || "{}");
+          if (parsed && parsed.vehicle && parsed.rating && parsed.feedback) {
+            if (typeof window !== "undefined") {
+              const key = "vehicle_experience_ratings";
+              const existingRaw = window.localStorage.getItem(key);
+              const list = existingRaw ? JSON.parse(existingRaw) : [];
+              list.push(parsed);
+              window.localStorage.setItem(key, JSON.stringify(list));
+              // Optional: dispatch a custom event so UI components can refresh
+              window.dispatchEvent(
+                new CustomEvent("vehicle-experience-updated", { detail: parsed })
+              );
+            }
+          }
+        } catch (_) {
+          // ignore parse errors
+        }
       }
       break;
     }

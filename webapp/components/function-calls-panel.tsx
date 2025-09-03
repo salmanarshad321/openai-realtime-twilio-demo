@@ -4,6 +4,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Item } from "@/components/types";
 
 type FunctionCallsPanelProps = {
@@ -16,6 +17,23 @@ const FunctionCallsPanel: React.FC<FunctionCallsPanelProps> = ({
   ws,
 }) => {
   const [responses, setResponses] = useState<Record<string, string>>({});
+  const [ratings, setRatings] = useState<any[]>([]);
+
+  React.useEffect(() => {
+    function load() {
+      if (typeof window === "undefined") return;
+      try {
+        const raw = window.localStorage.getItem("vehicle_experience_ratings");
+        if (raw) setRatings(JSON.parse(raw));
+      } catch (_) {
+        // ignore
+      }
+    }
+    load();
+    const handler = () => load();
+    window.addEventListener("vehicle-experience-updated", handler as any);
+    return () => window.removeEventListener("vehicle-experience-updated", handler as any);
+  }, []);
 
   // Filter function_call items
   const functionCalls = items.filter((it) => it.type === "function_call");
@@ -57,13 +75,42 @@ const FunctionCallsPanel: React.FC<FunctionCallsPanelProps> = ({
   };
 
   return (
-    <Card className="flex flex-col h-full">
+    <Card className="flex flex-col h-full relative">
       <CardHeader className="space-y-1.5 pb-0">
         <CardTitle className="text-base font-semibold">
           Function Calls
         </CardTitle>
       </CardHeader>
       <CardContent className="flex-1 p-4">
+        <div className="absolute top-2 right-2">
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button size="sm" variant="outline">Ratings</Button>
+            </DialogTrigger>
+            <DialogContent className="max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Vehicle Experience Ratings</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                {ratings.length === 0 && (
+                  <div className="text-sm text-muted-foreground">No ratings captured yet.</div>
+                )}
+                {ratings.map((r, idx) => (
+                  <div key={idx} className="rounded-md border p-3 text-sm space-y-1">
+                    <div className="font-medium">{r.vehicle}</div>
+                    <div className="flex text-xs gap-2">
+                      <span className="font-semibold">Rating:</span>
+                      <span>{r.rating}</span>
+                      <span className="font-semibold">Time:</span>
+                      <span>{new Date(r.serverTimestamp || Date.now()).toLocaleString()}</span>
+                    </div>
+                    <div className="text-muted-foreground whitespace-pre-wrap break-words">{r.feedback}</div>
+                  </div>
+                ))}
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
         <ScrollArea className="h-full">
           <div className="space-y-4">
             {functionCallsWithStatus.map((call) => (
