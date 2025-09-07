@@ -211,15 +211,15 @@ export default function ChecklistAndConfig({
           ),
       },
       {
-        label: "Start local WebSocket server",
+        label: "Start WebSocket server",
         done: localServerUp,
-        description: "cd websocket-server && npm run dev",
+        description: "WebSocket server running and accessible",
         field: null,
       },
       {
-        label: "Start ngrok",
-        done: publicUrlAccessible,
-        description: "Then set ngrok URL in websocket-server/.env",
+        label: "Public URL accessible",
+        done: publicUrlAccessible || (localServerUp && publicUrl),
+        description: "Server accessible via public domain",
         field: (
           <div className="flex items-center gap-2 w-full">
             <div className="flex-1">
@@ -235,7 +235,7 @@ export default function ChecklistAndConfig({
                 {ngrokLoading ? (
                   <Loader2 className="mr-2 h-4 animate-spin" />
                 ) : (
-                  "Check ngrok"
+                  "Check URL"
                 )}
               </Button>
             </div>
