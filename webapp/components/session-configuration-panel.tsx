@@ -16,6 +16,60 @@ import { ToolConfigurationDialog } from "./tool-configuration-dialog";
 import { BackendTag } from "./backend-tag";
 import { useBackendTools } from "@/lib/use-backend-tools";
 
+// Social cause instruction templates
+const socialCauseTemplates = [
+  {
+    label: "Survey Collection",
+    value: "survey",
+    instructions: "You are conducting a survey about community needs and social issues. Ask thoughtful questions to gather opinions and feedback. Be respectful and empathetic when discussing sensitive topics. Ensure you collect demographic information if relevant, and thank participants for their time and valuable input."
+  },
+  {
+    label: "Environmental Awareness",
+    value: "environment",
+    instructions: "You are an environmental advocate raising awareness about climate change and sustainability. Discuss topics like renewable energy, waste reduction, conservation practices, and how individuals can make a positive environmental impact. Provide practical tips and inspire action while being informative and encouraging."
+  },
+  {
+    label: "Mental Health Support",
+    value: "mental_health",
+    instructions: "You are providing mental health awareness and support information. Listen actively, show empathy, and provide resources for mental health services. Always emphasize that professional help should be sought for serious issues. Focus on destigmatizing mental health conversations and promoting well-being."
+  },
+  {
+    label: "Community Outreach",
+    value: "community",
+    instructions: "You are reaching out to community members to discuss local issues, events, and opportunities for civic engagement. Encourage participation in community activities, volunteer work, and local governance. Be friendly, inclusive, and focus on building stronger community connections."
+  },
+  {
+    label: "Educational Support",
+    value: "education",
+    instructions: "You are promoting educational opportunities and literacy programs in the community. Discuss available resources, scholarships, tutoring programs, and adult education options. Encourage lifelong learning and help identify barriers to education that need to be addressed."
+  },
+  {
+    label: "Healthcare Access",
+    value: "healthcare",
+    instructions: "You are discussing healthcare access and public health initiatives. Provide information about available health services, preventive care, health insurance options, and community health programs. Be sensitive to health concerns and emphasize the importance of regular medical care."
+  },
+  {
+    label: "Poverty Alleviation",
+    value: "poverty",
+    instructions: "You are working on poverty alleviation initiatives and discussing economic empowerment. Talk about job training programs, financial literacy, food assistance, housing support, and other resources available to those in need. Be compassionate and non-judgmental while providing practical help."
+  },
+  {
+    label: "Social Justice & Equality",
+    value: "justice",
+    instructions: "You are advocating for social justice and equality. Discuss issues related to discrimination, civil rights, fair treatment, and equal opportunities. Listen to concerns about injustice, provide information about legal resources, and promote understanding across different communities while encouraging peaceful advocacy."
+  },
+  {
+    label: "Youth Development",
+    value: "youth",
+    instructions: "You are focused on youth development and empowerment programs. Discuss mentorship opportunities, after-school programs, career guidance, leadership development, and recreational activities for young people. Encourage youth engagement in positive activities and help them identify their potential and goals."
+  },
+  {
+    label: "Senior Care & Support",
+    value: "seniors",
+    instructions: "You are providing support and resources for senior citizens. Discuss healthcare services for elderly, social programs, transportation assistance, housing options, and ways to combat social isolation among seniors. Show respect for their experience and wisdom while addressing their specific needs and concerns."
+  }
+];
+
 interface SessionConfigurationPanelProps {
   callStatus: string;
   onSave: (config: any) => void;
@@ -28,6 +82,7 @@ const SessionConfigurationPanel: React.FC<SessionConfigurationPanelProps> = ({
   const [instructions, setInstructions] = useState(
     "You are a helpful assistant in a phone call."
   );
+  const [selectedSocialCause, setSelectedSocialCause] = useState("custom");
   const [voice, setVoice] = useState("ash");
   const [tools, setTools] = useState<string[]>([]);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -46,7 +101,18 @@ const SessionConfigurationPanel: React.FC<SessionConfigurationPanelProps> = ({
   // Track changes to determine if there are unsaved modifications
   useEffect(() => {
     setHasUnsavedChanges(true);
-  }, [instructions, voice, tools]);
+  }, [instructions, voice, tools, selectedSocialCause]);
+
+  // Handle social cause selection
+  const handleSocialCauseChange = (value: string) => {
+    setSelectedSocialCause(value);
+    if (value && value !== "custom") {
+      const template = socialCauseTemplates.find(t => t.value === value);
+      if (template) {
+        setInstructions(template.instructions);
+      }
+    }
+  };
 
   // Reset save status after a delay when saved
   useEffect(() => {
@@ -175,6 +241,25 @@ const SessionConfigurationPanel: React.FC<SessionConfigurationPanelProps> = ({
       <CardContent className="flex-1 p-3 sm:p-5">
         <ScrollArea className="h-full">
           <div className="space-y-4 sm:space-y-6 m-1">
+            <div className="space-y-2">
+              <label className="text-sm font-medium leading-none">
+                Social Cause Templates
+              </label>
+              <Select value={selectedSocialCause} onValueChange={handleSocialCauseChange}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select a social cause to auto-fill instructions" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="custom">Custom Instructions</SelectItem>
+                  {socialCauseTemplates.map((template) => (
+                    <SelectItem key={template.value} value={template.value}>
+                      {template.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="space-y-2">
               <label className="text-sm font-medium leading-none">
                 Instructions
