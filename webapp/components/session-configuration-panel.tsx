@@ -153,7 +153,7 @@ const SessionConfigurationPanel: React.FC<SessionConfigurationPanelProps> = ({
       <CardHeader className="pb-0 px-4 sm:px-6">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base font-semibold">
-            Session Configuration
+            Call Configuration
           </CardTitle>
           <div className="flex items-center gap-2">
             {saveStatus === "error" ? (
