@@ -132,22 +132,23 @@ function tryConnectModel() {
             session: Object.assign({ modalities: ["text", "audio"], turn_detection: { type: "server_vad" }, voice: "ash", input_audio_transcription: { model: "whisper-1" }, input_audio_format: "g711_ulaw", output_audio_format: "g711_ulaw" }, config),
         });
         // Immediately queue an opening user message so the assistant responds first.
-        const openingLine = (config === null || config === void 0 ? void 0 : config.opening_line) ||
-            process.env.AI_OPENING_LINE ||
-            "Hello! I'm your AI assistant. How has your experience been with your vehicle so far?";
-        jsonSend(session.modelConn, {
-            type: "conversation.item.create",
-            item: {
-                type: "message",
-                role: "user",
-                content: [
-                    {
-                        type: "input_text",
-                        text: openingLine,
-                    },
-                ],
-            },
-        });
+        // const openingLine =
+        //   config?.opening_line ||
+        //   process.env.AI_OPENING_LINE ||
+        //   "Hello! I'm your AI assistant. How has your experience been with your vehicle so far?";
+        // jsonSend(session.modelConn, {
+        //   type: "conversation.item.create",
+        //   item: {
+        //     type: "message",
+        //     role: "user",
+        //     content: [
+        //       {
+        //         type: "input_text",
+        //         text: openingLine,
+        //       },
+        //     ],
+        //   },
+        // });
         jsonSend(session.modelConn, { type: "response.create" });
     });
     session.modelConn.on("message", handleModelMessage);

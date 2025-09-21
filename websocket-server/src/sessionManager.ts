@@ -146,24 +146,24 @@ function tryConnectModel() {
     });
 
     // Immediately queue an opening user message so the assistant responds first.
-    const openingLine =
-      config?.opening_line ||
-      process.env.AI_OPENING_LINE ||
-      "Hello! I'm your AI assistant. How has your experience been with your vehicle so far?";
+    // const openingLine =
+    //   config?.opening_line ||
+    //   process.env.AI_OPENING_LINE ||
+    //   "Hello! I'm your AI assistant. How has your experience been with your vehicle so far?";
 
-    jsonSend(session.modelConn, {
-      type: "conversation.item.create",
-      item: {
-        type: "message",
-        role: "user",
-        content: [
-          {
-            type: "input_text",
-            text: openingLine,
-          },
-        ],
-      },
-    });
+    // jsonSend(session.modelConn, {
+    //   type: "conversation.item.create",
+    //   item: {
+    //     type: "message",
+    //     role: "user",
+    //     content: [
+    //       {
+    //         type: "input_text",
+    //         text: openingLine,
+    //       },
+    //     ],
+    //   },
+    // });
     jsonSend(session.modelConn, { type: "response.create" });
   });
 
