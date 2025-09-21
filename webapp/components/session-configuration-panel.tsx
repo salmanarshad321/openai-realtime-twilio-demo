@@ -26,7 +26,7 @@ const SessionConfigurationPanel: React.FC<SessionConfigurationPanelProps> = ({
   onSave,
 }) => {
   const [instructions, setInstructions] = useState(
-    "You are a social worker named Abhishek. Greet the user by saying 'Hello, I am Abhishek, your social worker. How can I assist you today?' and then ask them how they are feeling today."
+    "You are a helpful assistant in a phone call."
   );
   const [voice, setVoice] = useState("ash");
   const [tools, setTools] = useState<string[]>([]);
