@@ -145,18 +145,21 @@ function tryConnectModel() {
       },
     });
 
-    // Immediately queue an opening assistant message so AI speaks first.
-    // This creates an assistant message and triggers a response.
+    // Immediately queue an opening user message so the assistant responds first.
+    const openingLine =
+      config?.opening_line ||
+      process.env.AI_OPENING_LINE ||
+      "Hello! I'm your AI assistant. How has your experience been with your vehicle so far?";
+
     jsonSend(session.modelConn, {
       type: "conversation.item.create",
       item: {
         type: "message",
-        role: "assistant",
+        role: "user",
         content: [
           {
-            type: "output_text",
-            text: config?.opening_line ||
-              "Hello! I'm your AI assistant. How has your experience been with your vehicle so far?",
+            type: "input_text",
+            text: openingLine,
           },
         ],
       },

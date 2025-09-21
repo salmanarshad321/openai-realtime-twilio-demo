@@ -31,6 +31,8 @@ export default function ChecklistAndConfig({
   selectedPhoneNumber: string;
   setSelectedPhoneNumber: (val: string) => void;
 }) {
+  // Respect a build-time/public env var to force the checklist to pass in dev
+  const forcePass = Boolean(process.env.NEXT_PUBLIC_FORCE_PASS_CHECKLIST === "true");
   const [hasCredentials, setHasCredentials] = useState(false);
   const [phoneNumbers, setPhoneNumbers] = useState<PhoneNumber[]>([]);
   const [currentNumberSid, setCurrentNumberSid] = useState("");
@@ -153,7 +155,7 @@ export default function ChecklistAndConfig({
     return [
       {
         label: "Set up Twilio account",
-        done: hasCredentials,
+        done: forcePass ? true : hasCredentials,
         description: "Then update account details in webapp/.env",
         field: (
           <Button
@@ -166,7 +168,7 @@ export default function ChecklistAndConfig({
       },
       {
         label: "Set up Twilio phone number",
-        done: phoneNumbers.length > 0,
+        done: forcePass ? true : phoneNumbers.length > 0,
         description: "Costs around $1.15/month",
         field:
           phoneNumbers.length > 0 ? (
@@ -212,13 +214,13 @@ export default function ChecklistAndConfig({
       },
       {
         label: "Start WebSocket server",
-        done: localServerUp,
+        done: forcePass ? true : localServerUp,
         description: "WebSocket server running and accessible",
         field: null,
       },
       {
         label: "Public URL accessible",
-        done: publicUrlAccessible || (localServerUp && publicUrl),
+        done: forcePass ? true : publicUrlAccessible || (localServerUp && publicUrl),
         description: "Server accessible via public domain",
         field: (
           <div className="flex items-center gap-2 w-full">
@@ -244,7 +246,7 @@ export default function ChecklistAndConfig({
       },
       {
         label: "Update Twilio webhook URL",
-        done: !!publicUrl && !isWebhookMismatch,
+        done: forcePass ? true : !!publicUrl && !isWebhookMismatch,
         description: "Can also be done manually in Twilio console",
         field: (
           <div className="flex items-center gap-2 w-full">

@@ -52,11 +52,22 @@ app.all("/twiml", (req, res) => {
 
     // Allow overriding via env or optional query param ?g=...
     const greetingParam = (req.query?.g as string) || "";
-    const rawGreeting = greetingParam || process.env.CALL_GREETING || "Hi";
+    const disablePreamble = ["off", "none", "false", "0"].includes(
+      greetingParam.toLowerCase?.() || (process.env.CALL_GREETING || "").toLowerCase()
+    );
+
+    const rawGreeting = disablePreamble
+      ? ""
+      : greetingParam || process.env.CALL_GREETING || "Hi";
     const greeting = escapeXml(rawGreeting);
 
     let twimlContent = twimlTemplate.replace("{{WS_URL}}", wsUrl.toString());
-    twimlContent = twimlContent.replace("{{GREETING}}", greeting);
+    if (disablePreamble) {
+      // Remove the <Say>{{GREETING}}</Say> line entirely when disabled
+      twimlContent = twimlContent.replace(/\s*<Say>\{\{GREETING\}\}<\/Say>\s*/g, "\n");
+    } else {
+      twimlContent = twimlContent.replace("{{GREETING}}", greeting);
+    }
     res.type("text/xml").send(twimlContent);
 });
 
