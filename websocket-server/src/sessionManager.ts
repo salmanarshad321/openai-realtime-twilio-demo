@@ -112,17 +112,23 @@ function handleFrontendMessage(data: RawData) {
     // If we have an active model connection, apply the configuration immediately
     if (isOpen(session.modelConn)) {
       const config = session.saved_config || {};
+      const sessionUpdate = {
+        modalities: ["text", "audio"],
+        turn_detection: { type: "server_vad" },
+        input_audio_transcription: { model: "whisper-1" },
+        input_audio_format: "g711_ulaw",
+        output_audio_format: "g711_ulaw",
+        ...config,
+      };
+      
+      // Only set default voice if user hasn't configured one
+      if (!config.voice) {
+        sessionUpdate.voice = "ash";
+      }
+      
       jsonSend(session.modelConn, {
         type: "session.update",
-        session: {
-          modalities: ["text", "audio"],
-          turn_detection: { type: "server_vad" },
-          voice: "ash",
-          input_audio_transcription: { model: "whisper-1" },
-          input_audio_format: "g711_ulaw",
-          output_audio_format: "g711_ulaw",
-          ...config,
-        },
+        session: sessionUpdate,
       });
     }
   } else if (isOpen(session.modelConn)) {
@@ -148,17 +154,23 @@ function tryConnectModel() {
 
   session.modelConn.on("open", () => {
     const config = session.saved_config || {};
+    const sessionUpdate = {
+      modalities: ["text", "audio"],
+      turn_detection: { type: "server_vad" },
+      input_audio_transcription: { model: "whisper-1" },
+      input_audio_format: "g711_ulaw",
+      output_audio_format: "g711_ulaw",
+      ...config,
+    };
+    
+    // Only set default voice if user hasn't configured one
+    if (!config.voice) {
+      sessionUpdate.voice = "ash";
+    }
+    
     jsonSend(session.modelConn, {
       type: "session.update",
-      session: {
-        modalities: ["text", "audio"],
-        turn_detection: { type: "server_vad" },
-        voice: "ash",
-        input_audio_transcription: { model: "whisper-1" },
-        input_audio_format: "g711_ulaw",
-        output_audio_format: "g711_ulaw",
-        ...config,
-      },
+      session: sessionUpdate,
     });
 
     // Immediately queue an opening user message so the assistant responds first.
