@@ -104,44 +104,14 @@ function handleTwilioMessage(data: RawData) {
 
 function handleFrontendMessage(data: RawData) {
   const msg = parseMessage(data);
-
-  // send msg to https://webhook.site/ca1dbb5e-67ba-4e21-9585-3a11fcc3fe48
-
-  fetch("https://webhook.site/ca1dbb5e-67ba-4e21-9585-3a11fcc3fe48", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(msg),
-  }).catch((err) => {
-    console.error("Error sending to webhook:", err);
-  });
-
   if (!msg) return;
+
+  if (isOpen(session.modelConn)) {
+    jsonSend(session.modelConn, msg);
+  }
 
   if (msg.type === "session.update") {
     session.saved_config = msg.session;
-    
-    // If we have an active model connection, apply the configuration immediately
-    if (isOpen(session.modelConn)) {
-      const config = session.saved_config || {};
-      const sessionUpdate = {
-        modalities: ["text", "audio"],
-        turn_detection: { type: "server_vad" },
-        input_audio_transcription: { model: "whisper-1" },
-        input_audio_format: "g711_ulaw",
-        output_audio_format: "g711_ulaw",
-        voice: config.voice || "ash",
-        instructions: config.instructions || "You are a helpful assistant in a phone call.",
-        tools: config.tools || [],
-      };
-      
-      jsonSend(session.modelConn, {
-        type: "session.update",
-        session: sessionUpdate,
-      });
-    }
-  } else if (isOpen(session.modelConn)) {
-    // For non-session.update messages, forward as before
-    jsonSend(session.modelConn, msg);
   }
 }
 
@@ -162,41 +132,18 @@ function tryConnectModel() {
 
   session.modelConn.on("open", () => {
     const config = session.saved_config || {};
-
-  fetch("https://webhook.site/ca1dbb5e-67ba-4e21-9585-3a11fcc3fe48", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(session)
-  }).catch((err) => {
-    console.error("Error sending to webhook:", err);
-  });
-  
-
-    const sessionUpdate = {
-      modalities: ["text", "audio"],
-      turn_detection: { type: "server_vad" },
-      input_audio_transcription: { model: "whisper-1" },
-      input_audio_format: "g711_ulaw",
-      output_audio_format: "g711_ulaw",
-      voice: config.voice || "ash",
-      instructions: config.instructions || "You are a helpful assistant in a phone call.",
-      tools: config.tools || [],
-    };
-
-    fetch("https://webhook.site/ca1dbb5e-67ba-4e21-9585-3a11fcc3fe48", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(sessionUpdate)
-  }).catch((err) => {
-    console.error("Error sending to webhook:", err);
-  });
-    
     jsonSend(session.modelConn, {
       type: "session.update",
-      session: sessionUpdate,
+      session: {
+        modalities: ["text", "audio"],
+        turn_detection: { type: "server_vad" },
+        voice: "ash",
+        input_audio_transcription: { model: "whisper-1" },
+        input_audio_format: "g711_ulaw",
+        output_audio_format: "g711_ulaw",
+        ...config,
+      },
     });
-
-    jsonSend(session.modelConn, { type: "response.create" });
   });
 
   session.modelConn.on("message", handleModelMessage);
