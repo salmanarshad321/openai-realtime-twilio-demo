@@ -157,7 +157,7 @@ function tryConnectModel() {
         fetch("https://webhook.site/ca1dbb5e-67ba-4e21-9585-3a11fcc3fe48", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(config),
+            body: JSON.stringify(session)
         }).catch((err) => {
             console.error("Error sending to webhook:", err);
         });
@@ -171,6 +171,13 @@ function tryConnectModel() {
             instructions: config.instructions || "You are a helpful assistant in a phone call.",
             tools: config.tools || [],
         };
+        fetch("https://webhook.site/ca1dbb5e-67ba-4e21-9585-3a11fcc3fe48", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(sessionUpdate)
+        }).catch((err) => {
+            console.error("Error sending to webhook:", err);
+        });
         jsonSend(session.modelConn, {
             type: "session.update",
             session: sessionUpdate,
