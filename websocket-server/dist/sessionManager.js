@@ -118,6 +118,7 @@ function handleFrontendMessage(data) {
     if (!msg)
         return;
     if (msg.type === "session.update") {
+        console.log("🔵 Received session.update from frontend:", msg.session);
         session.saved_config = msg.session;
         // Send saved config to webhook for debugging
         fetch("https://webhook.site/ca1dbb5e-67ba-4e21-9585-3a11fcc3fe48", {
@@ -133,6 +134,7 @@ function handleFrontendMessage(data) {
         });
         // If we have an active model connection, apply the configuration immediately
         if (isOpen(session.modelConn)) {
+            console.log("🔵 Applying configuration to existing model connection");
             const config = session.saved_config || {};
             const sessionUpdate = {
                 modalities: ["text", "audio"],
@@ -144,10 +146,14 @@ function handleFrontendMessage(data) {
                 instructions: config.instructions || "You are a helpful assistant in a phone call.",
                 tools: config.tools || [],
             };
+            console.log("🔵 Sending session update to OpenAI:", sessionUpdate);
             jsonSend(session.modelConn, {
                 type: "session.update",
                 session: sessionUpdate,
             });
+        }
+        else {
+            console.log("🔵 No active model connection, configuration will be applied when connection is established");
         }
     }
     else if (isOpen(session.modelConn)) {
@@ -167,6 +173,7 @@ function tryConnectModel() {
         },
     });
     session.modelConn.on("open", () => {
+        console.log("🔵 Model connection opened");
         const config = session.saved_config || {};
         // Send only relevant session data to webhook for debugging
         fetch("https://webhook.site/ca1dbb5e-67ba-4e21-9585-3a11fcc3fe48", {
@@ -193,6 +200,11 @@ function tryConnectModel() {
             instructions: config.instructions || "You are a helpful assistant in a phone call.",
             tools: config.tools || [],
         };
+        console.log("🔵 Initial session configuration being sent to OpenAI:", {
+            voice: sessionUpdate.voice,
+            instructions: sessionUpdate.instructions.substring(0, 100) + "...",
+            toolsCount: sessionUpdate.tools.length
+        });
         // Send session update config to webhook for debugging
         fetch("https://webhook.site/ca1dbb5e-67ba-4e21-9585-3a11fcc3fe48", {
             method: "POST",

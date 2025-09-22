@@ -127,14 +127,18 @@ const SessionConfigurationPanel: React.FC<SessionConfigurationPanelProps> = ({
   const handleSave = async () => {
     setSaveStatus("saving");
     try {
-      await onSave({
+      const configToSave = {
         instructions,
         voice,
         tools: tools.map((tool) => JSON.parse(tool)),
-      });
+      };
+      console.log("🟢 About to save configuration:", configToSave);
+      await onSave(configToSave);
       setSaveStatus("saved");
       setHasUnsavedChanges(false);
+      console.log("🟢 Configuration saved successfully");
     } catch (error) {
+      console.error("🔴 Error saving configuration:", error);
       setSaveStatus("error");
     }
   };
