@@ -1,9 +1,0 @@
-{
-  "/_not-found/page": "app/_not-found/page.js",
-  "/api/twilio/numbers/route": "app/api/twilio/numbers/route.js",
-  "/api/twilio/route": "app/api/twilio/route.js",
-  "/api/twilio/call/route": "app/api/twilio/call/route.js",
-  "/api/twilio/webhook-local/route": "app/api/twilio/webhook-local/route.js",
-  "/page": "app/page.js",
-  "/favicon.ico/route": "app/favicon.ico/route.js"
-}

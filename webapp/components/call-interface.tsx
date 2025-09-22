@@ -58,7 +58,6 @@ const CallInterface = () => {
             <SessionConfigurationPanel
               callStatus={callStatus}
               onSave={(config) => {
-                console.log("🟢 Session configuration saved in UI:", config);
                 if (ws && ws.readyState === WebSocket.OPEN) {
                   const updateEvent = {
                     type: "session.update",
@@ -66,11 +65,8 @@ const CallInterface = () => {
                       ...config,
                     },
                   };
-                  console.log("🟢 Sending update event to websocket server:", updateEvent);
+                  console.log("Sending update event:", updateEvent);
                   ws.send(JSON.stringify(updateEvent));
-                } else {
-                  console.error("🔴 WebSocket is not open, cannot send configuration");
-                  console.error("🔴 WebSocket state:", ws?.readyState);
                 }
               }}
             />
