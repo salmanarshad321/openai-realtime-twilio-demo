@@ -129,7 +129,7 @@ function tryConnectModel() {
         const config = session.saved_config || {};
         jsonSend(session.modelConn, {
             type: "session.update",
-            session: Object.assign({ modalities: ["text", "audio"], turn_detection: { type: "server_vad" }, voice: "ash", input_audio_transcription: { model: "whisper-1" }, input_audio_format: "g711_ulaw", output_audio_format: "g711_ulaw", instructions: `You are a career counsellor, answer questions using the following context:
+            session: Object.assign({ modalities: ["text", "audio"], turn_detection: { type: "server_vad" }, voice: "ash", input_audio_transcription: { model: "whisper-1" }, input_audio_format: "g711_ulaw", output_audio_format: "g711_ulaw", instructions: `Always speak in English. You are a career counsellor, answer questions using the following context:
 Stand Taller With Career Guru
 Career Guru provides holistic career guidance and support. We can help you reach your Dream Institution or Career through STEPD – a proprietary tool and approach for Strategic Profile Designing and Building developed by our experts from around the globe. We understand that Everyone has a unique story and the way you tell your story makes all the difference. We help you develop and then narrate your story in a strategic perspective – so that you achieve your goal. This will give you competitive advantage over others. The idea is to weave a compelling story of your personal, academic and professional life. Stories take time to build and it’s critically important how you tell them. This is what we call Strategic Profile Designing and Building – STEPD. We work with you over time – maybe weeks or years, to craft a beautiful and impressive story. The earlier we start the better!
 
