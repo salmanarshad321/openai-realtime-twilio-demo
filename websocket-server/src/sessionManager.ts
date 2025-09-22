@@ -106,12 +106,28 @@ function handleFrontendMessage(data: RawData) {
   const msg = parseMessage(data);
   if (!msg) return;
 
-  if (isOpen(session.modelConn)) {
-    jsonSend(session.modelConn, msg);
-  }
-
   if (msg.type === "session.update") {
     session.saved_config = msg.session;
+    
+    // If we have an active model connection, apply the configuration immediately
+    if (isOpen(session.modelConn)) {
+      const config = session.saved_config || {};
+      jsonSend(session.modelConn, {
+        type: "session.update",
+        session: {
+          modalities: ["text", "audio"],
+          turn_detection: { type: "server_vad" },
+          voice: "ash",
+          input_audio_transcription: { model: "whisper-1" },
+          input_audio_format: "g711_ulaw",
+          output_audio_format: "g711_ulaw",
+          ...config,
+        },
+      });
+    }
+  } else if (isOpen(session.modelConn)) {
+    // For non-session.update messages, forward as before
+    jsonSend(session.modelConn, msg);
   }
 }
 
