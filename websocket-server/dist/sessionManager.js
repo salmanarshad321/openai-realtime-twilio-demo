@@ -18,6 +18,7 @@ exports.forceDisconnect = forceDisconnect;
 const ws_1 = require("ws");
 const functionHandlers_1 = __importDefault(require("./functionHandlers"));
 let session = {};
+let connectTimer = null;
 function handleCallConnection(ws, openAIApiKey) {
     cleanupConnection(session.twilioConn);
     session.twilioConn = ws;
@@ -87,7 +88,10 @@ function handleTwilioMessage(data) {
             session.latestMediaTimestamp = 0;
             session.lastAssistantItem = undefined;
             session.responseStartTimestamp = undefined;
-            tryConnectModel();
+            // Give the frontend a brief window to push `session.update`
+            if (connectTimer)
+                clearTimeout(connectTimer);
+            connectTimer = setTimeout(() => tryConnectModel(), 600); // 300–800ms works well
             break;
         case "media":
             session.latestMediaTimestamp = msg.media.timestamp;
@@ -118,7 +122,8 @@ function handleFrontendMessage(data) {
     if (!msg)
         return;
     if (msg.type === "session.update") {
-        session.saved_config = msg.session;
+        // Cache for first-time connect AND forward live updates if already connected
+        session.saved_config = Object.assign(Object.assign({}, (session.saved_config || {})), (msg.session || {}));
         // Send saved config to webhook for debugging
         fetch("https://webhook.site/ca1dbb5e-67ba-4e21-9585-3a11fcc3fe48", {
             method: "POST",
@@ -131,27 +136,21 @@ function handleFrontendMessage(data) {
         }).catch((err) => {
             console.error("Error sending config to webhook:", err);
         });
-        // If we have an active model connection, apply the configuration immediately
-        if (isOpen(session.modelConn)) {
-            const config = session.saved_config || {};
-            const sessionUpdate = {
-                modalities: ["text", "audio"],
-                turn_detection: { type: "server_vad" },
-                input_audio_transcription: { model: "whisper-1" },
-                input_audio_format: "g711_ulaw",
-                output_audio_format: "g711_ulaw",
-                voice: config.voice || "ash",
-                instructions: config.instructions || "You are a helpful assistant in a phone call.",
-                tools: config.tools || [],
-            };
-            jsonSend(session.modelConn, {
-                type: "session.update",
-                session: sessionUpdate,
-            });
+        // If Twilio has started but model isn't connected yet, connect immediately with the new config
+        if (session.streamSid && !isOpen(session.modelConn)) {
+            if (connectTimer)
+                clearTimeout(connectTimer);
+            tryConnectModel();
         }
+        else if (isOpen(session.modelConn)) {
+            // Forward the session.update message directly to the model
+            jsonSend(session.modelConn, msg);
+            // Force a response to make changes audible immediately
+            jsonSend(session.modelConn, { type: "response.create" });
+        }
+        return; // don't fall through
     }
-    else if (isOpen(session.modelConn)) {
-        // For non-session.update messages, forward as before
+    if (isOpen(session.modelConn)) {
         jsonSend(session.modelConn, msg);
     }
 }
@@ -160,7 +159,11 @@ function tryConnectModel() {
         return;
     if (isOpen(session.modelConn))
         return;
-    session.modelConn = new ws_1.WebSocket("wss://api.openai.com/v1/realtime?model=gpt-realtime", {
+    const config = session.saved_config || {};
+    const selectedModel = (typeof config.model === "string" && config.model.trim()) ||
+        process.env.REALTIME_MODEL ||
+        "gpt-4o-realtime-preview-2024-12-17";
+    session.modelConn = new ws_1.WebSocket(`wss://api.openai.com/v1/realtime?model=${encodeURIComponent(selectedModel)}`, {
         headers: {
             Authorization: `Bearer ${session.openAIApiKey}`,
             "OpenAI-Beta": "realtime=v1",
@@ -183,31 +186,9 @@ function tryConnectModel() {
         }).catch((err) => {
             console.error("Error sending to webhook:", err);
         });
-        const sessionUpdate = {
-            modalities: ["text", "audio"],
-            turn_detection: { type: "server_vad" },
-            input_audio_transcription: { model: "whisper-1" },
-            input_audio_format: "g711_ulaw",
-            output_audio_format: "g711_ulaw",
-            voice: config.voice || "ash",
-            instructions: config.instructions || "You are a helpful assistant in a phone call.",
-            tools: config.tools || [],
-        };
-        // Send session update config to webhook for debugging
-        fetch("https://webhook.site/ca1dbb5e-67ba-4e21-9585-3a11fcc3fe48", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                type: "session_update_sent",
-                sessionUpdate: sessionUpdate,
-                timestamp: new Date().toISOString()
-            })
-        }).catch((err) => {
-            console.error("Error sending to webhook:", err);
-        });
         jsonSend(session.modelConn, {
             type: "session.update",
-            session: sessionUpdate,
+            session: Object.assign({ modalities: ["text", "audio"], turn_detection: { type: "server_vad" }, input_audio_transcription: { model: "whisper-1" }, input_audio_format: "g711_ulaw", output_audio_format: "g711_ulaw" }, (session.saved_config || {})),
         });
         jsonSend(session.modelConn, { type: "response.create" });
     });

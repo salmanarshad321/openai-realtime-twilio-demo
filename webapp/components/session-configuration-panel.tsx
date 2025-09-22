@@ -72,7 +72,7 @@ const socialCauseTemplates = [
 
 interface SessionConfigurationPanelProps {
   callStatus: string;
-  onSave: (config: any) => void;
+  onSave: (config: any) => boolean | Promise<boolean>;
 }
 
 const SessionConfigurationPanel: React.FC<SessionConfigurationPanelProps> = ({
@@ -127,11 +127,17 @@ const SessionConfigurationPanel: React.FC<SessionConfigurationPanelProps> = ({
   const handleSave = async () => {
     setSaveStatus("saving");
     try {
-      await onSave({
+      const result = await onSave({
         instructions,
         voice,
         tools: tools.map((tool) => JSON.parse(tool)),
       });
+      
+      if (result === false) {
+        setSaveStatus("error");
+        return;
+      }
+      
       setSaveStatus("saved");
       setHasUnsavedChanges(false);
     } catch (error) {
