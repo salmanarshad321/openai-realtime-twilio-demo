@@ -112,11 +112,16 @@ function handleFrontendMessage(data) {
         // If we have an active model connection, apply the configuration immediately
         if (isOpen(session.modelConn)) {
             const config = session.saved_config || {};
-            const sessionUpdate = Object.assign({ modalities: ["text", "audio"], turn_detection: { type: "server_vad" }, input_audio_transcription: { model: "whisper-1" }, input_audio_format: "g711_ulaw", output_audio_format: "g711_ulaw" }, config);
-            // Only set default voice if user hasn't configured one
-            if (!config.voice) {
-                sessionUpdate.voice = "ash";
-            }
+            const sessionUpdate = {
+                modalities: ["text", "audio"],
+                turn_detection: { type: "server_vad" },
+                input_audio_transcription: { model: "whisper-1" },
+                input_audio_format: "g711_ulaw",
+                output_audio_format: "g711_ulaw",
+                voice: config.voice || "ash",
+                instructions: config.instructions || "You are a helpful assistant in a phone call.",
+                tools: config.tools || [],
+            };
             jsonSend(session.modelConn, {
                 type: "session.update",
                 session: sessionUpdate,
@@ -141,33 +146,20 @@ function tryConnectModel() {
     });
     session.modelConn.on("open", () => {
         const config = session.saved_config || {};
-        const sessionUpdate = Object.assign({ modalities: ["text", "audio"], turn_detection: { type: "server_vad" }, input_audio_transcription: { model: "whisper-1" }, input_audio_format: "g711_ulaw", output_audio_format: "g711_ulaw" }, config);
-        // Only set default voice if user hasn't configured one
-        if (!config.voice) {
-            sessionUpdate.voice = "ash";
-        }
+        const sessionUpdate = {
+            modalities: ["text", "audio"],
+            turn_detection: { type: "server_vad" },
+            input_audio_transcription: { model: "whisper-1" },
+            input_audio_format: "g711_ulaw",
+            output_audio_format: "g711_ulaw",
+            voice: config.voice || "ash",
+            instructions: config.instructions || "You are a helpful assistant in a phone call.",
+            tools: config.tools || [],
+        };
         jsonSend(session.modelConn, {
             type: "session.update",
             session: sessionUpdate,
         });
-        // Immediately queue an opening user message so the assistant responds first.
-        // const openingLine =
-        //   config?.opening_line ||
-        //   process.env.AI_OPENING_LINE ||
-        //   "Hello! I'm your AI assistant. How has your experience been with your vehicle so far?";
-        // jsonSend(session.modelConn, {
-        //   type: "conversation.item.create",
-        //   item: {
-        //     type: "message",
-        //     role: "user",
-        //     content: [
-        //       {
-        //         type: "input_text",
-        //         text: openingLine,
-        //       },
-        //     ],
-        //   },
-        // });
         jsonSend(session.modelConn, { type: "response.create" });
     });
     session.modelConn.on("message", handleModelMessage);
