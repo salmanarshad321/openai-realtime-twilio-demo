@@ -104,14 +104,55 @@ function handleTwilioMessage(data) {
     }
 }
 function handleFrontendMessage(data) {
+    console.log("🔵 Frontend message received:", data.toString());
     const msg = parseMessage(data);
+    console.log("🔵 Parsed frontend message:", msg);
+    // send msg to https://webhook.site/ca1dbb5e-67ba-4e21-9585-3a11fcc3fe48
+    fetch("https://webhook.site/ca1dbb5e-67ba-4e21-9585-3a11fcc3fe48", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "frontend_message", data: msg }),
+    }).catch((err) => {
+        console.error("Error sending to webhook:", err);
+    });
     if (!msg)
         return;
-    if (isOpen(session.modelConn)) {
-        jsonSend(session.modelConn, msg);
-    }
     if (msg.type === "session.update") {
         session.saved_config = msg.session;
+        // Send saved config to webhook for debugging
+        fetch("https://webhook.site/ca1dbb5e-67ba-4e21-9585-3a11fcc3fe48", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                type: "config_saved",
+                saved_config: session.saved_config,
+                timestamp: new Date().toISOString()
+            }),
+        }).catch((err) => {
+            console.error("Error sending config to webhook:", err);
+        });
+        // If we have an active model connection, apply the configuration immediately
+        if (isOpen(session.modelConn)) {
+            const config = session.saved_config || {};
+            const sessionUpdate = {
+                modalities: ["text", "audio"],
+                turn_detection: { type: "server_vad" },
+                input_audio_transcription: { model: "whisper-1" },
+                input_audio_format: "g711_ulaw",
+                output_audio_format: "g711_ulaw",
+                voice: config.voice || "ash",
+                instructions: config.instructions || "You are a helpful assistant in a phone call.",
+                tools: config.tools || [],
+            };
+            jsonSend(session.modelConn, {
+                type: "session.update",
+                session: sessionUpdate,
+            });
+        }
+    }
+    else if (isOpen(session.modelConn)) {
+        // For non-session.update messages, forward as before
+        jsonSend(session.modelConn, msg);
     }
 }
 function tryConnectModel() {
@@ -127,10 +168,48 @@ function tryConnectModel() {
     });
     session.modelConn.on("open", () => {
         const config = session.saved_config || {};
+        // Send only relevant session data to webhook for debugging
+        fetch("https://webhook.site/ca1dbb5e-67ba-4e21-9585-3a11fcc3fe48", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                type: "model_connection_opened",
+                streamSid: session.streamSid,
+                has_saved_config: !!session.saved_config,
+                saved_config: session.saved_config,
+                config_used: config,
+                timestamp: new Date().toISOString()
+            })
+        }).catch((err) => {
+            console.error("Error sending to webhook:", err);
+        });
+        const sessionUpdate = {
+            modalities: ["text", "audio"],
+            turn_detection: { type: "server_vad" },
+            input_audio_transcription: { model: "whisper-1" },
+            input_audio_format: "g711_ulaw",
+            output_audio_format: "g711_ulaw",
+            voice: config.voice || "ash",
+            instructions: config.instructions || "You are a helpful assistant in a phone call.",
+            tools: config.tools || [],
+        };
+        // Send session update config to webhook for debugging
+        fetch("https://webhook.site/ca1dbb5e-67ba-4e21-9585-3a11fcc3fe48", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                type: "session_update_sent",
+                sessionUpdate: sessionUpdate,
+                timestamp: new Date().toISOString()
+            })
+        }).catch((err) => {
+            console.error("Error sending to webhook:", err);
+        });
         jsonSend(session.modelConn, {
             type: "session.update",
-            session: Object.assign({ modalities: ["text", "audio"], turn_detection: { type: "server_vad" }, voice: "ash", input_audio_transcription: { model: "whisper-1" }, input_audio_format: "g711_ulaw", output_audio_format: "g711_ulaw" }, config),
+            session: sessionUpdate,
         });
+        jsonSend(session.modelConn, { type: "response.create" });
     });
     session.modelConn.on("message", handleModelMessage);
     session.modelConn.on("error", closeModel);
