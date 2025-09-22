@@ -9,6 +9,19 @@ const TopBar = () => {
       <div className="flex items-center gap-4">
         <h1 className="text-xl font-semibold">Call Assistant</h1>
       </div>
+      <div className="flex gap-3">
+        <Button variant="ghost" size="sm">
+          <Link
+            href="https://platform.openai.com/docs/guides/realtime"
+            className="flex items-center gap-2"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <BookOpen className="w-4 h-4" />
+            Documentation
+          </Link>
+        </Button>
+      </div>
     </div>
   );
 };
