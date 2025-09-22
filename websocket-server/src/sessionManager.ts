@@ -121,7 +121,7 @@ function tryConnectModel() {
   if (isOpen(session.modelConn)) return;
 
   session.modelConn = new WebSocket(
-    "wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-12-17",
+    "wss://api.openai.com/v1/realtime?model=gpt-realtime",
     {
       headers: {
         Authorization: `Bearer ${session.openAIApiKey}`,
@@ -146,24 +146,24 @@ function tryConnectModel() {
     });
 
     // Immediately queue an opening user message so the assistant responds first.
-    const openingLine =
-      config?.opening_line ||
-      process.env.AI_OPENING_LINE ||
-      "Hello! I'm your AI assistant. How has your experience been with your vehicle so far?";
+    // const openingLine =
+    //   config?.opening_line ||
+    //   process.env.AI_OPENING_LINE ||
+    //   "Hello! I'm your AI assistant. How has your experience been with your vehicle so far?";
 
-    jsonSend(session.modelConn, {
-      type: "conversation.item.create",
-      item: {
-        type: "message",
-        role: "user",
-        content: [
-          {
-            type: "input_text",
-            text: openingLine,
-          },
-        ],
-      },
-    });
+    // jsonSend(session.modelConn, {
+    //   type: "conversation.item.create",
+    //   item: {
+    //     type: "message",
+    //     role: "user",
+    //     content: [
+    //       {
+    //         type: "input_text",
+    //         text: openingLine,
+    //       },
+    //     ],
+    //   },
+    // });
     jsonSend(session.modelConn, { type: "response.create" });
   });
 

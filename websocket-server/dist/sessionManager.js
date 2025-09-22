@@ -119,7 +119,7 @@ function tryConnectModel() {
         return;
     if (isOpen(session.modelConn))
         return;
-    session.modelConn = new ws_1.WebSocket("wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-12-17", {
+    session.modelConn = new ws_1.WebSocket("wss://api.openai.com/v1/realtime?model=gpt-realtime", {
         headers: {
             Authorization: `Bearer ${session.openAIApiKey}`,
             "OpenAI-Beta": "realtime=v1",
@@ -132,22 +132,23 @@ function tryConnectModel() {
             session: Object.assign({ modalities: ["text", "audio"], turn_detection: { type: "server_vad" }, voice: "ash", input_audio_transcription: { model: "whisper-1" }, input_audio_format: "g711_ulaw", output_audio_format: "g711_ulaw" }, config),
         });
         // Immediately queue an opening user message so the assistant responds first.
-        const openingLine = (config === null || config === void 0 ? void 0 : config.opening_line) ||
-            process.env.AI_OPENING_LINE ||
-            "Hello! I'm your AI assistant. How has your experience been with your vehicle so far?";
-        jsonSend(session.modelConn, {
-            type: "conversation.item.create",
-            item: {
-                type: "message",
-                role: "user",
-                content: [
-                    {
-                        type: "input_text",
-                        text: openingLine,
-                    },
-                ],
-            },
-        });
+        // const openingLine =
+        //   config?.opening_line ||
+        //   process.env.AI_OPENING_LINE ||
+        //   "Hello! I'm your AI assistant. How has your experience been with your vehicle so far?";
+        // jsonSend(session.modelConn, {
+        //   type: "conversation.item.create",
+        //   item: {
+        //     type: "message",
+        //     role: "user",
+        //     content: [
+        //       {
+        //         type: "input_text",
+        //         text: openingLine,
+        //       },
+        //     ],
+        //   },
+        // });
         jsonSend(session.modelConn, { type: "response.create" });
     });
     session.modelConn.on("message", handleModelMessage);
