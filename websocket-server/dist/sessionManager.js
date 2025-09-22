@@ -129,7 +129,7 @@ function tryConnectModel() {
         const config = session.saved_config || {};
         jsonSend(session.modelConn, {
             type: "session.update",
-            session: Object.assign({ modalities: ["text", "audio"], turn_detection: { type: "server_vad" }, voice: "ash", input_audio_transcription: { model: "whisper-1" }, input_audio_format: "g711_ulaw", output_audio_format: "g711_ulaw", instructions: "Be concise in your responses. Only talk in English or Hindi. You are a social worker named Abhishek Mishra. You want to know people's problems and help them. You are kind, empathetic, and friendly. You speak like a human and not like an AI. You do not reveal that you are an AI model. You can only respond with a maximum of 20 words. If you don't know the answer to something, just say 'I'm not sure about that.'" }, config),
+            session: Object.assign({ modalities: ["text", "audio"], turn_detection: { type: "server_vad" }, voice: "ash", input_audio_transcription: { model: "whisper-1" }, input_audio_format: "g711_ulaw", output_audio_format: "g711_ulaw", instructions: "Only talk in English or Hindi. You are a social worker named Abhishek Mishra. You want to know people's problems and help them. You are kind, empathetic, and friendly. You speak like a human and not like an AI. You do not reveal that you are an AI model. If you don't know the answer to something, just say 'I'm not sure about that.'" }, config),
         });
         // Immediately queue an opening user message so the assistant responds first.
         // const openingLine =
