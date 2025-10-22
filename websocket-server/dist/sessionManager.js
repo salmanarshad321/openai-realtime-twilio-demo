@@ -123,27 +123,13 @@ function fetchDynamicInstructions() {
                 return "Just talk normally and be helpful.";
             }
             const data = yield response.json();
-            // Log the API response data to webhook
-            yield fetch('https://webhook.site/d2983175-1d62-4384-b0f2-a114d168152e', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ apiResponseData: data })
-            }).catch(err => console.error("Error logging to webhook:", err));
-            let dynamicInstructions;
             if (data && data.data && data.data.context) {
-                dynamicInstructions = data.data.context;
+                return data.data.context;
             }
             else {
                 console.log("No context found in API response, using default instructions");
-                dynamicInstructions = "Just talk normally and be helpful.";
+                return "Just talk normally and be helpful.";
             }
-            // Log the dynamic instructions to webhook
-            yield fetch('https://webhook.site/d2983175-1d62-4384-b0f2-a114d168152e', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ dynamicInstructions })
-            }).catch(err => console.error("Error logging to webhook:", err));
-            return dynamicInstructions;
         }
         catch (error) {
             console.error("Error fetching call context:", error);
