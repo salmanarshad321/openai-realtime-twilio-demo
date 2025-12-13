@@ -42,6 +42,21 @@ app.all("/twiml", (req, res) => {
   wsUrl.protocol = "wss:";
   wsUrl.pathname = `/call`;
 
+  // Extract custom parameters from query string
+  const customParams: Record<string, string> = {};
+  for (const [key, value] of Object.entries(req.query)) {
+    if (key !== 'g' && typeof value === 'string') {
+      customParams[key] = value;
+    }
+  }
+  
+  // Add custom parameters to WebSocket URL
+  if (Object.keys(customParams).length > 0) {
+    for (const [key, value] of Object.entries(customParams)) {
+      wsUrl.searchParams.append(key, value);
+    }
+  }
+
     const escapeXml = (s: string) =>
       s
         .replace(/&/g, "&amp;")
@@ -93,7 +108,14 @@ wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
   if (type === "call") {
     if (currentCall) currentCall.close();
     currentCall = ws;
-    handleCallConnection(currentCall, OPENAI_API_KEY);
+    
+    // Extract custom parameters from WebSocket URL
+    const customParams: Record<string, string> = {};
+    for (const [key, value] of url.searchParams.entries()) {
+      customParams[key] = value;
+    }
+    
+    handleCallConnection(currentCall, OPENAI_API_KEY, customParams);
   } else if (type === "logs") {
     if (currentLogs) currentLogs.close();
     currentLogs = ws;

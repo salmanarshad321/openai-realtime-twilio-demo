@@ -11,14 +11,17 @@ interface Session {
   responseStartTimestamp?: number;
   latestMediaTimestamp?: number;
   openAIApiKey?: string;
+  customParams?: Record<string, string>;
+  callSid?: string;
 }
 
 let session: Session = {};
 
-export function handleCallConnection(ws: WebSocket, openAIApiKey: string) {
+export function handleCallConnection(ws: WebSocket, openAIApiKey: string, customParams?: Record<string, string>) {
   cleanupConnection(session.twilioConn);
   session.twilioConn = ws;
   session.openAIApiKey = openAIApiKey;
+  session.customParams = customParams;
 
   ws.on("message", handleTwilioMessage);
   ws.on("error", ws.close);
@@ -82,6 +85,7 @@ function handleTwilioMessage(data: RawData) {
   switch (msg.event) {
     case "start":
       session.streamSid = msg.start.streamSid;
+      session.callSid = msg.start.callSid;
       session.latestMediaTimestamp = 0;
       session.lastAssistantItem = undefined;
       session.responseStartTimestamp = undefined;
@@ -105,8 +109,7 @@ function handleTwilioMessage(data: RawData) {
 function handleFrontendMessage(data: RawData) {
   const msg = parseMessage(data);
   if (!msg) return;
-
-  if (isOpen(session.modelConn)) {
+   if (isOpen(session.modelConn)) {
     jsonSend(session.modelConn, msg);
   }
 
@@ -114,10 +117,23 @@ function handleFrontendMessage(data: RawData) {
     session.saved_config = msg.session;
   }
 }
-
 async function fetchDynamicInstructions(): Promise<string> {
   try {
-    const response = await fetch('http://139.59.88.183/api/get-current-call-context');
+    // Build query params from session data
+    const params = new URLSearchParams();
+    if (session.callSid) params.append('callSid', session.callSid);
+    if (session.streamSid) params.append('streamSid', session.streamSid);
+    
+    // Add any custom parameters passed via TwiML URL
+    if (session.customParams) {
+      for (const [key, value] of Object.entries(session.customParams)) {
+        params.append(key, value);
+      }
+    }
+    
+    const url = `http://139.59.88.183/api/get-current-call-context?${params.toString()}`;
+    
+    const response = await fetch(url);
     if (!response.ok) {
       console.warn(`Failed to fetch call context: ${response.status} ${response.statusText}`);
       return "Just talk normally and be helpful.";
